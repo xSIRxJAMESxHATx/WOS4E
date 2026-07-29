@@ -18,16 +18,16 @@ Inspired by a rich client-side workout SPA, this edition is rewritten from the g
 | **Auth** | Username + bcrypt-hashed password. No shared accounts. |
 | **Dashboard** | Today’s workouts, calories, protein, plan overview, macro targets |
 | **Profile** | Age, sex, height, weight, activity, goal → BMR / TDEE / macros; body-weight log; 1RM estimator |
-| **Programs** | Ready-made templates (full body, upper/lower, 5×5, cardio, power) |
+| **Programs** | 50+ ready-made templates (beginner → advanced, home, rehab, olympic, etc.) |
 | **Builder** | Build or edit plans, set sets/reps/rest/weight, log a session in one click |
-| **Library** | Curated exercise list by category |
+| **Library** | 200+ exercises with YouTube form search links |
 | **Nutrition** | Log foods (per 100 g database), daily totals |
 | **Progress** | Volume and body-weight charts (Plotly) |
 | **Journal** | Free-text training reflections |
 | **Recovery** | Practical nutrition / recovery / progression tips |
 | **Share / QR** | Generate a QR code for your live app URL and download the PNG |
+| **Theme** | Light UI by default with a Dark mode toggle in the sidebar |
 | **Security & Data** | Export / import JSON backup; clear privacy notes |
-| **Monetize** | Built-in roadmap for ownership-friendly revenue |
 
 Data is stored in a local **SQLite** database under `data/wos4e.db`, keyed by `user_id`. Other users cannot read your rows.
 

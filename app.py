@@ -37,36 +37,68 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------------------------
-# Theme / CSS
+# Theme / CSS  (light default + dark mode toggle)
 # ---------------------------------------------------------------------------
-st.markdown(
-    """
+LIGHT_CSS = """
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@500;700&family=Inter:wght@400;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
     html, body, [class*="css"] { font-family: 'Inter', system-ui, sans-serif; }
-    h1, h2, h3 { font-family: 'Oswald', sans-serif !important; text-transform: uppercase; letter-spacing: 0.02em; }
+    h1, h2, h3 { font-weight: 700 !important; letter-spacing: -0.01em; color: #1a1a1a !important; }
+    .stApp { background: #f7f6f4; color: #1a1a1a; }
+    [data-testid="stSidebar"] { background: #ffffff; border-right: 1px solid #e8e4df; }
+    div[data-testid="stMetricValue"] { color: #c1652f !important; }
+    .stButton > button {
+        background: #c1652f; color: white; border: none; border-radius: 8px;
+        font-weight: 600; letter-spacing: 0.01em;
+    }
+    .stButton > button:hover { background: #e17a3d; color: white; }
+    .tip {
+        background: #fff8f0; border-left: 3px solid #e0a83c;
+        padding: 10px 14px; border-radius: 6px; margin-bottom: 8px; font-size: 0.92rem;
+        color: #333;
+    }
+    .ex-card {
+        background: #fff; border: 1px solid #e8e4df; border-radius: 8px;
+        padding: 10px 14px; margin-bottom: 6px;
+    }
+    a.yt-link { color: #c1652f; text-decoration: none; font-size: 0.85rem; font-weight: 600; }
+    a.yt-link:hover { text-decoration: underline; }
+</style>
+"""
+
+DARK_CSS = """
+<style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    html, body, [class*="css"] { font-family: 'Inter', system-ui, sans-serif; }
+    h1, h2, h3 { font-weight: 700 !important; letter-spacing: -0.01em; color: #f0e6d2 !important; }
     .stApp { background: #141110; color: #f0e6d2; }
     [data-testid="stSidebar"] { background: #1d1917; border-right: 1px solid #3a322c; }
-    .metric-card {
-        background: #221d1a; border: 1px solid #3a322c; border-radius: 10px;
-        padding: 14px; text-align: center;
-    }
-    .metric-card .v { font-family: Oswald, sans-serif; font-size: 1.6rem; color: #e17a3d; }
-    .metric-card .l { font-size: 0.7rem; color: #c9bda6; text-transform: uppercase; }
     div[data-testid="stMetricValue"] { color: #e17a3d !important; }
     .stButton > button {
-        background: #c1652f; color: white; border: none; border-radius: 6px;
-        font-weight: 700; text-transform: uppercase; letter-spacing: 0.03em;
+        background: #c1652f; color: white; border: none; border-radius: 8px;
+        font-weight: 600;
     }
     .stButton > button:hover { background: #e17a3d; color: white; }
     .tip {
         background: #2a2420; border-left: 3px solid #e0a83c;
-        padding: 8px 12px; border-radius: 4px; margin-bottom: 8px; font-size: 0.9rem;
+        padding: 10px 14px; border-radius: 6px; margin-bottom: 8px; font-size: 0.92rem;
     }
+    .ex-card {
+        background: #221d1a; border: 1px solid #3a322c; border-radius: 8px;
+        padding: 10px 14px; margin-bottom: 6px;
+    }
+    a.yt-link { color: #e17a3d; text-decoration: none; font-size: 0.85rem; font-weight: 600; }
+    a.yt-link:hover { text-decoration: underline; }
 </style>
-""",
-    unsafe_allow_html=True,
-)
+"""
+
+
+def apply_theme():
+    if "dark_mode" not in st.session_state:
+        st.session_state.dark_mode = False
+    css = DARK_CSS if st.session_state.dark_mode else LIGHT_CSS
+    st.markdown(css, unsafe_allow_html=True)
+
 
 
 # ---------------------------------------------------------------------------
@@ -81,6 +113,8 @@ def ensure_state():
         st.session_state.data = None
     if "page" not in st.session_state:
         st.session_state.page = "Dashboard"
+    if "dark_mode" not in st.session_state:
+        st.session_state.dark_mode = False
 
 
 def persist():
@@ -97,6 +131,7 @@ def refresh_data():
 # Auth UI
 # ---------------------------------------------------------------------------
 def auth_screen():
+    apply_theme()
     st.title("💪 WOS4E")
     st.caption("Work Out Solutions for Everyone — private, secure, yours.")
     tab_login, tab_register = st.tabs(["Log in", "Create account"])
@@ -274,7 +309,7 @@ def page_profile():
 
 def page_programs():
     st.header("Programs")
-    st.caption("Load a ready-made plan into the Builder.")
+    st.caption(f"{len(PROGRAMS)} programs — load any into the Builder.")
     for key, pr in PROGRAMS.items():
         with st.expander(f"{pr['label']} · {pr['type']}"):
             for it in pr["items"]:
@@ -351,14 +386,23 @@ def page_builder():
 
 def page_library():
     st.header("Exercise Library")
+    st.caption(f"{len(EXERCISES)} exercises · click YouTube for form reference")
     q = st.text_input("Search")
     cat = st.selectbox("Category", ["all"] + list(CATS.keys()), format_func=lambda c: "All" if c == "all" else CATS[c])
+    shown = 0
     for e in EXERCISES:
         if cat != "all" and e["cat"] != cat:
             continue
         if q and q.lower() not in e["name"].lower():
             continue
-        st.markdown(f"**{e['name']}** · {CATS.get(e['cat'], e['cat'])} · {e['equip']} · _{e['muscles']}_")
+        shown += 1
+        st.markdown(
+            f'<div class="ex-card"><b>{e["name"]}</b> · {CATS.get(e["cat"], e["cat"])} · {e["equip"]} · <i>{e["muscles"]}</i>'
+            f' &nbsp; <a class="yt-link" href="{e["video"]}" target="_blank" rel="noopener">▶ YouTube form</a></div>',
+            unsafe_allow_html=True,
+        )
+    if shown == 0:
+        st.info("No exercises match your filters.")
 
 
 def page_nutrition():
@@ -437,7 +481,7 @@ def page_progress():
             ]
         )
         fig = px.line(df, x="date", y="volume", markers=True, title="Training volume")
-        fig.update_layout(template="plotly_dark", paper_bgcolor="#141110", plot_bgcolor="#221d1a")
+        fig.update_layout(template="plotly_dark" if st.session_state.dark_mode else "plotly_white")
         st.plotly_chart(fig, use_container_width=True)
         st.dataframe(df.iloc[::-1], use_container_width=True, hide_index=True)
     else:
@@ -447,7 +491,7 @@ def page_progress():
     if bw:
         bdf = pd.DataFrame(bw)
         fig2 = px.line(bdf, x="date", y="weight", markers=True, title="Body weight (kg)")
-        fig2.update_layout(template="plotly_dark", paper_bgcolor="#141110", plot_bgcolor="#221d1a")
+        fig2.update_layout(template="plotly_dark" if st.session_state.dark_mode else "plotly_white")
         st.plotly_chart(fig2, use_container_width=True)
 
 
@@ -550,22 +594,6 @@ def page_security():
         st.rerun()
 
 
-def page_monetize():
-    st.header("Monetization roadmap (ownership)")
-    st.markdown(
-        """
-You own this codebase. Suggested paths to monetize while keeping user data private:
-
-1. **Freemium** — free core tracking; paid “Pro” for advanced programs, export analytics, multi-device sync (requires a backend you control).
-2. **One-time license** — sell the app as a self-hosted package for coaches/gyms.
-3. **Affiliate** — link equipment/nutrition products you trust (disclose clearly).
-4. **Coaching upsell** — optional paid check-ins; the in-app journal and progress charts already support that workflow.
-5. **White-label** — rebrand for gyms and charge a setup + monthly fee.
-
-Never sell or share individual user data. Privacy is a competitive advantage.
-        """
-    )
-
 
 # ---------------------------------------------------------------------------
 # Main
@@ -573,6 +601,7 @@ Never sell or share individual user data. Privacy is a competitive advantage.
 def main():
     init_db()
     ensure_state()
+    apply_theme()
 
     if not require_login():
         auth_screen()
@@ -581,6 +610,10 @@ def main():
     with st.sidebar:
         st.markdown(f"**@{st.session_state.username}**")
         st.caption("Your data stays private.")
+        dark = st.toggle("Dark mode", value=st.session_state.dark_mode, key="dark_toggle")
+        if dark != st.session_state.dark_mode:
+            st.session_state.dark_mode = dark
+            st.rerun()
         pages = [
             "Dashboard",
             "Profile",
@@ -593,8 +626,7 @@ def main():
             "Recovery",
             "Share / QR",
             "Security & Data",
-            "Monetize",
-        ]
+            ]
         choice = st.radio("Navigate", pages, index=pages.index(st.session_state.page) if st.session_state.page in pages else 0)
         st.session_state.page = choice
         st.divider()
@@ -625,8 +657,6 @@ def main():
         page_share()
     elif page == "Security & Data":
         page_security()
-    elif page == "Monetize":
-        page_monetize()
 
 
 if __name__ == "__main__":
